@@ -23,9 +23,9 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 bot = Bot("!", intents=discord.Intents.all())
 
 lectio = LectioHandler(
-    username=os.getenv("USERNAME"),
-    password=os.getenv("PASSWORD"),
-    skoleID=os.getenv("SKOLEID")
+    username=os.getenv("LECTIO_USERNAME"),
+    password=os.getenv("LECTIO_PASSWORD"),
+    skoleID=os.getenv("LECTIO_SKOLEID")
 )
 
 @bot.event
