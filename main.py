@@ -20,10 +20,9 @@ KALENDER = [
 ]
 
 TOKEN = os.getenv('DISCORD_TOKEN')
-bot = Bot("!", intents=discord.Intents.all())
 
 class LectioBot(Bot):
-    def __init__(self, bot, command_prefix = "!") -> None:
+    def __init__(self, command_prefix = "!") -> None:
         Bot.__init__(self, command_prefix=command_prefix,intents=discord.Intents.all())
         # Bot
         self.logger = LogHandler()
@@ -39,6 +38,7 @@ class LectioBot(Bot):
     
     async def on_ready(self):
         self.logger.log(LogLevel.SUCCES, f'{self.user} er forbundet til Discord!')
+        self.today = datetime.today().isocalendar()
         await self.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Lectio"))
 
         for guild in self.guilds:
@@ -50,7 +50,7 @@ class LectioBot(Bot):
                 self.skema_id[guild.name] = discord.utils.get(guild.channels, name="skema").id
             
             self.logger.log(LogLevel.SUCCES, f"Fandt skemaID for guild: {guild}")
-            await self.send_weekly_schedule(guild, 37, 2023)
+            await self.send_weekly_schedule(guild, self.today[1], self.today[0])
         
         #await bot.get_channel(1148524567611048029).purge(limit=10)
         #await clear_channel(bot.get_channel(1148522781324083261).id)
@@ -58,11 +58,11 @@ class LectioBot(Bot):
     async def send_weekly_schedule(self, guild, week: int, year: int) -> None:
         await self.clear_channel(self.skema_id[guild.name])
         await self.get_channel(self.skema_id[guild.name]).send(
-            f"**🔥🔥 Her kommer skemaet for uge 36 🔥🔥**"
+            f"**🔥🔥 Her kommer skemaet for uge 37 🔥🔥**"
         )
 
         for i in range(1, 6):
-            await self.send_skema(i, week, year)
+            await self.send_skema(guild, i, week, year)
 
     def launch(self) -> None:
         self.logger.log(LogLevel.INFO, "Starter LectioBot...")
@@ -71,7 +71,7 @@ class LectioBot(Bot):
     def add_commands(self):
         @self.command(name="skema")
         async def skema_command(ctx, dag, uge):    
-            await self.send_skema(int(dag), int(uge), 2023, channel=ctx)
+            await self.send_skema(ctx.guild, int(dag), int(uge), 2023, channel=ctx)
 
     
     async def skema_channel_exists(self, guild: discord.Guild) -> bool:
@@ -99,9 +99,9 @@ class LectioBot(Bot):
     async def clear_channel(self, channel_id: int):
         await self.get_channel(channel_id).purge(limit=100)
 
-    async def send_skema(self, dag: int, uge: int, år: int, channel = None):
+    async def send_skema(self, guild, dag: int, uge: int, år: int, channel = None):
         skema = self.lectio.få_skema_for_dag(dag, uge, år)
-        skema_channel = self.get_channel(self.skema_id["Salam"])
+        skema_channel = self.get_channel(self.skema_id[guild.name])
         await self.send_embed({
             "title": f"**{KALENDER[dag-1]} uge {uge}**",
             "url": f"https://www.lectio.dk/lectio/{self.lectio.client.skoleId}/SkemaNy.aspx?week={uge}{år}",
@@ -132,5 +132,5 @@ class LectioBot(Bot):
 
 
 if __name__ == "__main__":
-    lectio_bot = LectioBot(bot=bot)
+    lectio_bot = LectioBot()
     lectio_bot.launch()
