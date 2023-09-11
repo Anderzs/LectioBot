@@ -25,25 +25,28 @@ class LogHandler:
 
         logging.basicConfig(
             filename=self.file_name,
-            format='[%(levelname)-8s]%(asctime)s %(message)s',
+            format='[%(levelname)-8s] (%(asctime)s): %(message)s',
             filemode='a')
         
+        self.log_file = log_file
+        self.logger = logging.getLogger()
+
     def log(self, level: LogLevel, message: str) -> None:
         msg = f"{level.value} | {message}"
         print(msg)
 
-        """
-        self.log_file = log_file
-        self.logger = logging.getLogger()
-        self.logger.setLevel(logging.DEBUG) 
-        self.logger.debug("This is just a harmless debug message") 
-        self.logger.info("This is just an information for you") 
-        self.logger.warning("OOPS!!!Its a Warning") 
-        self.logger.error("Have you try to divide a number by zero") 
-        self.logger.critical("The Internet is not working....")
-        """ 
-        
-
-if __name__ == "__main__":
-    loghandler = LogHandler()
-    loghandler.log(LogLevel.WARNING, "Ja det bare en test")
+        match level:
+            case LogLevel.WARNING:
+                self.logger.setLevel(logging.WARNING)
+                self.logger.warning(message)
+            case LogLevel.ERROR:
+                self.logger.setLevel(logging.ERROR)
+                self.logger.error(message)
+            case LogLevel.CRITICAL:
+                self.logger.setLevel(logging.CRITICAL)
+                self.logger.critical(message)
+            case LogLevel.INFO | LogLevel.SUCCES:
+                self.logger.setLevel(logging.INFO)
+                self.logger.info(message)
+            case _:
+                pass
